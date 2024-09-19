@@ -58,6 +58,7 @@ fn generate_random_literal(number_variables: u32, max_factor: i32, name_map: &mu
     name_map.insert(name, random_variable_index);
     EquationPart::Literal {
         factor: random_factor,
-        name: random_variable_index
+        name: random_variable_index,
+        pos: true
     }
 }

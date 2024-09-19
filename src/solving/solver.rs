@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 use crate::{parsing, solving};
 use crate::parsing::equation_ds::{Equation, File};
-use crate::solving::pb_ds::{new, Clause, Literal, PBFormula};
+use crate::solving::pb_ds::{new, Clause, PbLiteral, PBFormula};
 
 pub fn count(formula: &PBFormula, n: u32, start_progress: u32, end_progress: u32, cache_count: &mut HashMap<u64, u128>) -> u128 {
     let mut formula_cache_count: u32 = 0;
@@ -37,13 +37,50 @@ pub fn count(formula: &PBFormula, n: u32, start_progress: u32, end_progress: u32
     }
 }
 
+pub fn count_bcp(formula: &mut PBFormula, start_progress: u32, end_progress: u32, cache_count: &mut HashMap<u64, u128>) -> u128 {
+    let mut map_result = cache_count.get(&calculate_hash(&formula));
+    match map_result {
+        Some(c) => {
+            return *c;
+        }
+        None => {
+            if !formula.bcp() {
+                return 0;
+            }else{
+                if(formula.clauses.len() == 0){
+                    2_u128.pow(formula.n)
+                }else if formula.contains_false_clause() {
+                    0
+                }else{
+                    let l = get_next_variable(formula);
+                    let mut f1 = formula.get_sub_formula(l, true);
+                    let mut f2 = formula.get_sub_formula(l, false);
+
+                    let progress_mid = start_progress + (end_progress - start_progress) / 2;
+                    let c1 = crate::solving::solver::count_disconnected_components(f1, start_progress, progress_mid, cache_count);
+                    if(end_progress - start_progress >= 1){
+                        println!("{progress_mid} %");
+                    }
+                    let c2 = crate::solving::solver::count_disconnected_components(f2, progress_mid, end_progress, cache_count);
+
+                    let res = c1 + c2;
+                    cache_count.insert(calculate_hash(&formula), res);
+                    return res;
+                }
+            }
+
+        }
+    }
+}
+
 fn calculate_hash<T: Hash>(t: &T) -> u64 {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
     s.finish()
 }
 
-pub fn count_disconnected_components(pb_formula: PBFormula, n: u32,  start_progress: u32, end_progress: u32, mut cache_count: &mut HashMap<u64, u128>) -> u128 {
+pub fn count_disconnected_components(pb_formula: PBFormula,  start_progress: u32, end_progress: u32, mut cache_count: &mut HashMap<u64, u128>) -> u128 {
+    let n = *(&pb_formula.n);
     let disconnected_formula = formula_to_disconnected_formula(pb_formula, n);
     //println!("partitions: {}", disconnected_formula.partitions.len());
     let mut res: u128 = 1;
@@ -54,8 +91,8 @@ pub fn count_disconnected_components(pb_formula: PBFormula, n: u32,  start_progr
     let partition_progress = progress / disconnected_formula.partitions.len() as u32;
     let mut i = 0;
 
-    for partition in disconnected_formula.partitions {
-        let tmp = count_dc(&partition.formula, partition.formula.n, start_progress + i*partition_progress, start_progress + (i+1)*partition_progress, &mut cache_count);
+    for mut partition in disconnected_formula.partitions {
+        let tmp = count_bcp(&mut partition.formula, start_progress + i*partition_progress, start_progress + (i+1)*partition_progress, &mut cache_count);
         i += 1;
         res *= tmp;
     }
@@ -63,10 +100,8 @@ pub fn count_disconnected_components(pb_formula: PBFormula, n: u32,  start_progr
 }
 
 fn get_next_variable(pbformula: &PBFormula) -> u32 {
-    match get_necessary_variable(pbformula){
-        Some(t) => return t,
-        None => {
-            let mut counter: HashMap<u32,u64> = HashMap::new();
+
+    let mut counter: HashMap<u32,u64> = HashMap::new();
             for clause in &pbformula.clauses {
                 for literal in &clause.literals {
                     let tmp_res = counter.get(&literal.name);
@@ -89,8 +124,7 @@ fn get_next_variable(pbformula: &PBFormula) -> u32 {
                 }
             }
             max_index
-        }
-    }
+
 }
 
 fn get_next_variable_for_best_partition(pbformula: &PBFormula, n: u32) -> u32 {
@@ -100,7 +134,7 @@ fn get_next_variable_for_best_partition(pbformula: &PBFormula, n: u32) -> u32 {
             let mut best_index: u32 = u32::MAX;
             let mut best_value: u64 = u64::MAX;
 
-            let mut variables: HashSet<&Literal> = HashSet::new();
+            let mut variables: HashSet<&PbLiteral> = HashSet::new();
             for clause in & pbformula.clauses {
                 for literal in & clause.literals {
                     variables.insert(literal);
@@ -152,12 +186,12 @@ fn count_dc(formula: &PBFormula, n: u32,  start_progress: u32, end_progress: u32
                 let n = f1.n;
 
                 let progress_mid = start_progress + (end_progress - start_progress) / 2;
-                let c1 = count_disconnected_components(f1, n, start_progress, progress_mid, cache_count);
+                let c1 = count_disconnected_components(f1, start_progress, progress_mid, cache_count);
 
                 if(end_progress - start_progress >= 1){
                     println!("{progress_mid} %");
                 }
-                let c2 = count_disconnected_components(f2, n, progress_mid, end_progress, cache_count);
+                let c2 = count_disconnected_components(f2, progress_mid, end_progress, cache_count);
 
                 let res = c1 + c2;
                 cache_count.insert(calculate_hash(&formula), res);

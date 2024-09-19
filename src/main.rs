@@ -41,13 +41,13 @@ fn main() {
 
     //print_file_as_pbcount_string(file);
 
+    //run_solver_with_bcp("/home/stefan/stefan-vill-master/tmp_eval/tmp6.opb")
+    //run_solver_on_path("/home/stefan/stefan-vill-master/tmp_eval/tmp6.opb");
 
 
 
-
-
-    run_solver_on_path("/home/stefan/stefan-vill-master/tmp_eval/tmp6.opb");
-    //count_with_disconnected_components("/home/stefan/stefan-vill-master/tmp_eval/tmp5.opb")
+    //run_solver_on_path("/home/stefan/stefan-vill-master/tmp_eval/tmp6.opb");
+    count_with_disconnected_components("/home/stefan/stefan-vill-master/tmp_eval/tmp6.opb")
 
     /*
     let unparsed_file = fs::read_to_string("/home/stefan/stefan-vill-master/tmp_eval/tmp4.opb").expect("cannot read file");
@@ -59,6 +59,19 @@ fn main() {
 
 }
 
+fn run_solver_with_bcp(path: &str){
+    let unparsed_file = fs::read_to_string(path).expect("cannot read file");
+    let file = parsing::parser::parse(&unparsed_file);
+    let mut cache_count = HashMap::with_capacity(100_000_000);
+    let f = parsing::preprocessing::preprocess_file(file);
+    let mut pb_formula = solving::pb_ds::new(&f);
+    use std::time::Instant;
+    let now = Instant::now();
+    let res = solving::solver::count_bcp(&mut pb_formula, 0, 100, &mut cache_count);
+    let elapsed = now.elapsed();
+    println!("{}\nin {} s", res, elapsed.as_secs());
+}
+
 fn count_with_disconnected_components_on_string(content: String) {
     let file = parsing::parser::parse(&content);
     let mut cache_count = HashMap::with_capacity(100_000_000);
@@ -67,7 +80,7 @@ fn count_with_disconnected_components_on_string(content: String) {
     use std::time::Instant;
     let now = Instant::now();
     let n = pb_formula.n;
-    let res =  count_disconnected_components(pb_formula, n, 0, 100, &mut cache_count);
+    let res =  count_disconnected_components(pb_formula, 0, 100, &mut cache_count);
     let elapsed = now.elapsed();
     println!("{}\nin {} s", res, elapsed.as_secs());
 }
@@ -81,7 +94,7 @@ fn count_with_disconnected_components(path: &str) {
     use std::time::Instant;
     let now = Instant::now();
     let n = pb_formula.n;
-    let res =  count_disconnected_components(pb_formula, n, 0, 100, &mut cache_count);
+    let res =  count_disconnected_components(pb_formula, 0, 100, &mut cache_count);
     let elapsed = now.elapsed();
     println!("{}\nin {} s", res, elapsed.as_secs());
 }

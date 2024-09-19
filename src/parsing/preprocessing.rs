@@ -66,11 +66,13 @@ fn preprocessing_literals_left_numbers_right(equation: &mut Equation){
         match item {
             EquationPart::Literal{
                 factor,
-                name
+                name,
+                pos
             } => {
                 lit_vec.push(Literal {
                     factor: *factor,
-                    name: *name})
+                    name: *name,
+                pos: *pos})
             },
             EquationPart::Factor(i) => {
                 num_vec.push(Factor(*i * -1))
@@ -81,11 +83,13 @@ fn preprocessing_literals_left_numbers_right(equation: &mut Equation){
         match item {
             EquationPart::Literal{
                 factor,
-                name
+                name,
+                pos
             } => {
                 lit_vec.push(Literal {
                     factor: *factor * -1,
-                    name: *name})
+                    name: *name,
+                pos: *pos})
             },
             EquationPart::Factor(i) => {
                 num_vec.push(Factor(*i))
@@ -105,7 +109,7 @@ fn preprocessing_add_up_same(equation: &mut Equation){
             EquationPart::Factor(f) => {
                 factors += f;
             }
-            EquationPart::Literal {factor, name} => {
+            EquationPart::Literal {factor, name, pos} => {
                 let res = hash_map.get(&name);
                 match res {
                     None => {
@@ -123,7 +127,7 @@ fn preprocessing_add_up_same(equation: &mut Equation){
             EquationPart::Factor(f) => {
                 factors += f;
             }
-            EquationPart::Literal {factor, name} => {
+            EquationPart::Literal {factor, name,pos} => {
                 let res = hash_map.get(&name);
                 match res {
                     None => {
@@ -144,7 +148,8 @@ fn preprocessing_add_up_same(equation: &mut Equation){
         }
         output.push(EquationPart::Literal {
             name: i,
-            factor: f
+            factor: f,
+            pos: true
         });
     }
     equation.e1.literals = output;

@@ -141,6 +141,7 @@ fn parse_literal(rule: Pair<Rule>, file: &mut File) -> EquationPart {
     EquationPart::Literal {
         name: index,
         factor,
+        pos: true
     }
 }
 

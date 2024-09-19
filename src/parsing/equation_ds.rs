@@ -160,6 +160,7 @@ pub enum EquationPart {
     Literal {
         factor: i32,
         name: u32,
+        pos: bool
     },
     Factor(i32)
 }
@@ -173,7 +174,7 @@ impl Display for EquationPart {
                 } else {
                     write!(f, "+{}", i)}
             },
-            EquationPart::Literal {factor, name} => write!(f, "{}*{}", factor, name)
+            EquationPart::Literal {factor, name, pos} => write!(f, "{}*{}", factor, name)
         }
     }
 }
@@ -187,7 +188,7 @@ impl EquationPart {
                 } else {
                     write!(result, "+{}", i).unwrap();}
             },
-            EquationPart::Literal {factor, name} => {
+            EquationPart::Literal {factor, name, pos} => {
                 let tmp = file.name_map.get_by_right(name);
                 if factor < &0 {
                     write!(result, "{}*{}", factor, file.name_map.get_by_right(name).unwrap()).unwrap();
@@ -208,7 +209,7 @@ impl EquationPart {
                 } else {
                     write!(result, "+{}", i).unwrap();}
             },
-            EquationPart::Literal {factor, name} => {
+            EquationPart::Literal {factor, name, pos} => {
                 if factor < &0 {
                     write!(result, "{} x{}", factor, name +1).unwrap();
                 } else {
@@ -225,7 +226,7 @@ impl EquationPart {
             EquationPart::Factor(i) => {
 
             },
-            EquationPart::Literal {factor, name} => {
+            EquationPart::Literal {factor, name,pos} => {
                 if factor < &0 {
                     write!(result, "-{}", name +1).unwrap();
                 } else {
